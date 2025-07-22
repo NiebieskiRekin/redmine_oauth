@@ -99,7 +99,7 @@ function oauth_settings_visibility()
             div_oauth_options.find('#oauth_option_version').hide();
             site.val("https://accounts.google.com");
             break;
-        case 'Keycloak':
+        case 'Keycloak', 'Keycloak /auth':
             div_oauth_options.show();
             div_oauth_options.find('#oauth_options_site').show();
             div_oauth_options.find('#oauth_options_tenant').show();
