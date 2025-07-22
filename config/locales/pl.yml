@@ -1,0 +1,51 @@
+pl:
+  oauth_login_via: "Kontynuuj z **%{oauth}**"
+  oauth_login_with: Zaloguj się za pomocą OAuth
+  oauth_no_verified_email: Brak zweryfikowanego adresu e-mail. Sprawdź swoje ustawienia na stronie dostawcy OAuth.
+  oauth_invalid_provider: Nieprawidłowy dostawca OAuth
+  oauth_none: Brak
+  oauth_provider: Dostawca
+  oauth_provider_info: Dostawca OAuth.
+  oauth_site: Strona
+  oauth_site_info: Adres URL uwierzytelniania dostawcy OAuth.
+  oauth_client_id: ID klienta
+  oauth_client_id_info: ID aplikacji (klienta).
+  oauth_client_secret: Sekret klienta
+  oauth_client_secret_info: Hasło aplikacji.
+  oauth_tenant_id: ID dzierżawcy / Obszar
+  oauth_tenant_id_info: ID katalogu (dzierżawcy).
+  oauth_button_info: Kolor i ikona (klasa czcionki Awesome) przycisku logowania OAuth (puste pole oznacza brak przycisku).
+  oauth_login_button: Przycisk logowania
+  oauth_custom_name: Nazwa dostawcy
+  oauth_custom_name_info: Tytuł wyświetlany na przycisku logowania OAuth.
+  oauth_custom_auth_endpoint: Punkt końcowy uwierzytelniania
+  oauth_custom_auth_endpoint_info: Punkt końcowy uwierzytelniania aplikacji.
+  oauth_custom_token_endpoint: Punkt końcowy tokena
+  oauth_custom_token_endpoint_info: Punkt końcowy tokena aplikacji.
+  oauth_custom_profile_endpoint: Punkt końcowy profilu
+  oauth_custom_profile_endpoint_info: Punkt końcowy profilu aplikacji.
+  oauth_custom_scope: Zakres OAuth
+  oauth_custom_scope_info: "Zakres OAuth (domyślnie: 'openid profile email')."
+  oauth_custom_uid_field: Pole UID
+  oauth_custom_uid_field_info: "Pole UID (domyślnie: preferred_username)."
+  oauth_custom_email_field: Pole e-mail
+  oauth_custom_email_field_info: "Pole e-mail (domyślnie: email)."
+  oauth_hide_login_form: Ukryj formularz logowania
+  oauth_custom_firstname_field: Pole imienia dostawcy
+  oauth_custom_lastname_field: Pole nazwiska dostawcy
+  oauth_update_login: Zaktualizuj dane logowania
+  oauth_update_login_info: Zaktualizuj dane logowania użytkownika po pomyślnym zalogowaniu.
+  oauth_logout: Wylogowanie OAuth
+  oauth_logout_info: Wyloguj się również od dostawcy OAuth po wylogowaniu z Redmine.
+  oauth_login: Logowanie OAuth
+  oauth_login_info: Zezwalaj użytkownikom na automatyczne logowanie za pośrednictwem dostawcy OAuth, pomijając formularz logowania.
+  oauth_custom_logout_endpoint: Punkt końcowy wylogowania
+  oauth_custom_logout_endpoint_info: Punkt końcowy wylogowania aplikacji.
+  oauth_validate_user_roles: Walidacja ról użytkownika
+  oauth_validate_user_roles_info: "Klucz, w którym role użytkownika są obecne w tokenie. Jeśli ustawiony, rola 'user' przyznaje dostęp, rola 'admin' przyznaje prawa administratora. Jeśli rola 'user' nie jest obecna, dostęp jest odmawiany. Jeśli brakuje roli 'admin', prawa administratora są odbierane. Np.: Wprowadź 'resource_access.redmine.roles', jeśli Twój token jest ustawiony w następujący sposób: 'resource_access': { 'redmine': { 'roles': ['user', 'admin'] } }"
+  oauth_autologin: "Automatyczne logowanie z %{oauth}"
+  oauth_version: Wersja
+  oauth_version_info: Wersja punktu końcowego
+  oauth_only_login: Logowanie tylko przez OAuth
+  oauth_only_login_info: |
+    Po włączeniu użytkownicy zostaną przekierowani bezpośrednio do dostawcy OAuth, całkowicie pomijając standardową stronę logowania.
