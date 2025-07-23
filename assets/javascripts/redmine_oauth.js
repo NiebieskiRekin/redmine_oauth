@@ -74,6 +74,7 @@ function oauth_settings_visibility()
             div_oauth_options.find('#oauth_options_tenant').show();
             div_oauth_options.find('#oauth_options_custom').hide();
             div_oauth_options.find('#oauth_option_version').show();
+            div_oauth_options.find("#oauth_options_path").hide();
             tenant_id.val("");
             site.val("https://login.microsoftonline.com");
             break;
@@ -83,6 +84,7 @@ function oauth_settings_visibility()
             div_oauth_options.find('#oauth_options_tenant').hide();
             div_oauth_options.find('#oauth_options_custom').hide();
             div_oauth_options.find('#oauth_option_version').hide();
+            div_oauth_options.find("#oauth_options_path").hide();
             site.val("https://github.com");
             break;
         case 'GitLab':
@@ -91,6 +93,7 @@ function oauth_settings_visibility()
             div_oauth_options.find('#oauth_options_tenant').hide();
             div_oauth_options.find('#oauth_options_custom').hide();
             div_oauth_options.find('#oauth_option_version').hide();
+            div_oauth_options.find("#oauth_options_path").hide();
             break;
         case 'Google':
             div_oauth_options.show();
@@ -98,9 +101,10 @@ function oauth_settings_visibility()
             div_oauth_options.find('#oauth_options_tenant').hide();
             div_oauth_options.find('#oauth_options_custom').hide();
             div_oauth_options.find('#oauth_option_version').hide();
+            div_oauth_options.find("#oauth_options_path").hide();
             site.val("https://accounts.google.com");
             break;
-        case 'Keycloak', 'Keycloak /auth':
+        case 'Keycloak':
             div_oauth_options.show();
             div_oauth_options.find('#oauth_options_site').show();
             div_oauth_options.find('#oauth_options_tenant').show();
@@ -115,6 +119,7 @@ function oauth_settings_visibility()
             div_oauth_options.find('#oauth_options_tenant').show();
             div_oauth_options.find('#oauth_options_custom').hide();
             div_oauth_options.find('#oauth_option_version').hide();
+            div_oauth_options.find("#oauth_options_path").hide();
             tenant_id.val("default");
             break;
         case 'Custom':
@@ -124,6 +129,7 @@ function oauth_settings_visibility()
             tenant_id.val("");
             div_oauth_options.find('#oauth_option_version').hide();
             div_oauth_options.find('#oauth_options_custom').show();
+            div_oauth_options.find("#oauth_options_path").hide();
             $("input#settings_custom_auth_endpoint").val("");
             $("input#settings_custom_token_endpoint").val("");
             $("input#settings_custom_profile_endpoint").val("");

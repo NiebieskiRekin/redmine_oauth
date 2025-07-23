@@ -77,7 +77,7 @@ class RedmineOauthController < AccountController
         code_challenge: code_challenge,
         code_challenge_method: 'S256'
       )
-    when 'Keycloak', 'Keycloak /auth'
+    when 'Keycloak'
       redirect_to RedmineOauth::OauthClient.client.auth_code.authorize_url(
         redirect_uri: oauth_callback_url,
         state: oauth_csrf_token,
@@ -153,7 +153,7 @@ class RedmineOauthController < AccountController
       user_info = JSON.parse(userinfo_response.body)
       user_info['login'] = user_info['email']
       email = user_info['email']
-    when 'Keycloak', 'Keycloak /auth'
+    when 'Keycloak'
       token = RedmineOauth::OauthClient.client.auth_code.get_token(params['code'],
                                                                    redirect_uri: oauth_callback_url,
                                                                    code_verifier: code_verifier)
