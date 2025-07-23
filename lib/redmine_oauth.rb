@@ -47,7 +47,7 @@ module RedmineOauth
 
     def oauth_path
       if Setting.plugin_redmine_oauth['oauth_path'].present?
-        Setting.plugin_redmine_oauth['oauth_path'].strip.chomp('/') + "/"
+        "/" + Setting.plugin_redmine_oauth['oauth_path'].strip.chomp('/')
       else
         ''
       end
