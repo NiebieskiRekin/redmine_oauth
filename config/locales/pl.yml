@@ -58,3 +58,5 @@ pl:
   oauth_only_login: Logowanie tylko przez OAuth
   oauth_only_login_info: |
     Po włączeniu użytkownicy zostaną przekierowani bezpośrednio do dostawcy OAuth, całkowicie pomijając standardową stronę logowania.
+  oauth_path: Ścieżka do OAuth
+  oauth_path_info: W przypadku, gdy Keycloak jest skonfigurowany by obsługiwać żądania pod inną ścieżką niż /

@@ -64,8 +64,8 @@ module RedmineOauth
             RedmineOauth.client_id,
             Redmine::Ciphering.decrypt_text(RedmineOauth.client_secret),
             site: site,
-            authorize_url: "/realms/#{RedmineOauth.tenant_id}/protocol/openid-connect/auth",
-            token_url: "/realms/#{RedmineOauth.tenant_id}/protocol/openid-connect/token"
+            authorize_url: "#{RedmineOauth.oauth_path}/realms/#{RedmineOauth.tenant_id}/protocol/openid-connect/auth",
+            token_url: "#{RedmineOauth.oauth_path}/realms/#{RedmineOauth.tenant_id}/protocol/openid-connect/token"
           )
         when 'Keycloak /auth'
           OAuth2::Client.new(

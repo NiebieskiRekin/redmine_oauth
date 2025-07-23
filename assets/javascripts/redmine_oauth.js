@@ -61,6 +61,7 @@ function oauth_settings_visibility()
     site.val("");
     $("input#settings_client_id").val("");
     $("input#settings_client_secret").val("");
+    div_oauth_options.find("#oauth_options_path").hide();
     
     switch(oauth_name) {
         case 'none':
@@ -105,6 +106,7 @@ function oauth_settings_visibility()
             div_oauth_options.find('#oauth_options_tenant').show();
             div_oauth_options.find('#oauth_options_custom').hide();
             div_oauth_options.find('#oauth_option_version').hide();
+            div_oauth_options.find("#oauth_options_path").show();
             tenant_id.val("");
             break;
         case 'Okta':

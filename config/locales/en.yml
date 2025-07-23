@@ -80,3 +80,5 @@ en:
   oauth_only_login: OAuth-only login
   oauth_only_login_info: |
     When enabled, users will be redirected straight to the OAuth provider, entirely skipping the standard login page.
+  oauth_path: OAuth provider path
+  oauth_path_info: When Keycloak is configured to use serve requests at a different path other than /

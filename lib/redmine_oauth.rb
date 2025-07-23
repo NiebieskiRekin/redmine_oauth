@@ -45,6 +45,14 @@ module RedmineOauth
       end
     end
 
+    def oauth_path
+      if Setting.plugin_redmine_oauth['oauth_path'].present?
+        Setting.plugin_redmine_oauth['oauth_path'].strip.chomp('/') + "/"
+      else
+        ''
+      end
+    end
+
     def client_secret
       if Setting.plugin_redmine_oauth['client_secret'].present?
         Setting.plugin_redmine_oauth['client_secret'].strip
