@@ -46,6 +46,15 @@ pl:
   oauth_autologin: "Automatyczne logowanie z %{oauth}"
   oauth_version: Wersja
   oauth_version_info: Wersja punktu końcowego
+  oauth_enable_group_roles: Włącz role grupowe
+  oauth_enable_group_roles_info: |
+    Po włączeniu, wszelkie dodatkowe role poza domyślnymi (admin, użytkownik) są mapowane do grupy o tej samej nazwie.
+    Oznacza to, że jeśli utworzysz grupę o nazwie „deweloper”, a twój użytkownik ma rolę o nazwie „deweloper”, użytkownik zostanie
+    dodany do tej grupy.
+        
+    Użytkownicy zostaną usunięci z każdej grupy, która nie jest częścią ich ról, jeśli ta opcja jest włączona, co oznacza, że jeśli
+    ręcznie dodasz użytkownika do grupy „deweloper”, ale nie ma on roli w twoim dostawcy tożsamości, użytkownik
+    zostanie usunięty z tej grupy.
   oauth_only_login: Logowanie tylko przez OAuth
   oauth_only_login_info: |
     Po włączeniu użytkownicy zostaną przekierowani bezpośrednio do dostawcy OAuth, całkowicie pomijając standardową stronę logowania.
