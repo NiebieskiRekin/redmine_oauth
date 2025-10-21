@@ -1,6 +1,36 @@
 Changelog for Redmine OAuth
 ==========================
 
+3.0.8 *2025-10-03*
+------------------
+
+    Matching users by login
+    Redmine 6.1 compatibility
+
+* Bug #98 - Cookie overflow
+* New #97 - Matching users by username instead of e-mail
+
+3.0.7 *2025-09-17*
+------------------
+
+    Case insensitive email for identification of users
+
+* New #92 - Email check is case-sensitive
+* New #91 - First time login experience?
+* Bug #93 - Fix enable group roles label
+
+3.0.6 *2025-09-05*
+------------------
+
+    Keycloak v18 support
+
+* New #89 - Faraday/OAuth2 path joining issue
+* Bug #88 - AzureAD/Entra ID - ID token
+* New #87 - Can't fully sign out from Redmine when using Keycloak provider
+* New #85 - Feat: Add group syncing
+* New #84 - Feat: Make custom name available for every provider
+* New #83 - Feat: Add forced OAuth
+
 3.0.5 *2025-07-07*
 ------------------
     

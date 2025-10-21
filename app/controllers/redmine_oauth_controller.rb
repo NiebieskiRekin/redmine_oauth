@@ -120,13 +120,16 @@ class RedmineOauthController < AccountController
     # Retrieve the PKCE code_verifier from the session
     code_verifier = session.delete(:code_verifier)
 
+    token = nil
+
     case RedmineOauth.oauth_name
     when 'Azure AD'
       token = RedmineOauth::OauthClient.client.auth_code.get_token(params['code'],
                                                                    redirect_uri: oauth_callback_url,
                                                                    code_verifier: code_verifier)
-      user_info = JWT.decode(token.token, nil, false).first
-      email = user_info['unique_name']
+      id_token = token.params['id_token']
+      user_info = JWT.decode(id_token, nil, false).first
+      email = user_info['email']
     when 'GitHub'
       token = RedmineOauth::OauthClient.client.auth_code.get_token(params['code'],
                                                                    redirect_uri: oauth_callback_url,
@@ -158,6 +161,7 @@ class RedmineOauthController < AccountController
       user_info = JWT.decode(token.token, nil, false).first
       user_info['login'] = user_info['preferred_username']
       email = user_info['email']
+      session[:oauth_id_token] = token.params[:id_token]
     when 'Okta'
       token = RedmineOauth::OauthClient.client.auth_code.get_token(params['code'],
                                                                    redirect_uri: oauth_callback_url,
@@ -169,6 +173,7 @@ class RedmineOauthController < AccountController
       user_info = JSON.parse(userinfo_response.body)
       user_info['login'] = user_info['preferred_username']
       email = user_info['email']
+      session[:oauth_id_token] = token.params[:id_token]
     when 'Custom'
       token = RedmineOauth::OauthClient.client.auth_code.get_token(params['code'],
                                                                    redirect_uri: oauth_callback_url,
@@ -190,6 +195,7 @@ class RedmineOauthController < AccountController
     raise StandardError, l(:oauth_no_verified_email) unless email
 
     # Roles
+    non_default_roles = []
     keys = RedmineOauth.validate_user_roles.split('.')
     if keys&.size&.positive?
       roles = user_info
@@ -209,11 +215,12 @@ class RedmineOauthController < AccountController
         invalid_credentials
         raise StandardError, l(:notice_account_invalid_credentials)
       end
+      non_default_roles = roles - %w[admin user]
     end
 
     # Try to log in
     set_params
-    try_to_login email, user_info
+    try_to_login email, user_info, non_default_roles
     session[:oauth_login] = true
   rescue StandardError => e
     Rails.logger.error e.message
@@ -253,16 +260,26 @@ class RedmineOauthController < AccountController
     session.delete :oauth_autologin
   end
 
-  def try_to_login(email, info)
-    user = User.joins(:email_addresses).where(email_addresses: { address: email }).first
+  def try_to_login(email, info, role_names)
+    # Login name
+    login = info['login']
+    login ||= info['unique_name']
+    login ||= info['preferred_username']
+    # Find the user
+    user = case RedmineOauth.identify_user_by
+           when 'login'
+             User.where('LOWER(login) = ?', login.downcase).first
+           else
+             User.joins(:email_addresses).where('LOWER(email_addresses.address) = ?', email.downcase).first
+           end
     if user # Existing user
       if user.registered? # Registered
         account_pending user
       elsif user.active? # Active
         handle_active_user user
         user.update_last_login_on!
-        if RedmineOauth.update_login? && (info['login'] || info['unique_name'])
-          user.login = info['login'] || info['unique_name']
+        if RedmineOauth.update_login?
+          user.login = login
           Rails.logger.error(user.errors.full_messages.to_sentence) unless user.save
         end
         # Disable 2FA initialization request
@@ -284,8 +301,6 @@ class RedmineOauthController < AccountController
       lastname ||= info[key]
       user.lastname = lastname
       user.mail = email
-      login = info['login']
-      login ||= info['unique_name']
       user.login = login
       user.random_password
       user.register
@@ -308,6 +323,12 @@ class RedmineOauthController < AccountController
       invalid_credentials
       raise StandardError, l(:notice_account_invalid_credentials)
     end
+
+    if RedmineOauth.enable_group_roles?
+      desired_groups = Group.where(lastname: role_names)
+      user.group_ids = desired_groups.ids
+    end
+
     return if @admin.nil?
 
     user = User.find(user.id)

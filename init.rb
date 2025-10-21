@@ -24,7 +24,7 @@ Redmine::Plugin.register :redmine_oauth do
   name 'Redmine OAuth plugin'
   author 'Karel Pičman'
   description 'Redmine OAuth plugin'
-  version '3.0.5'
+  version '3.0.8'
   url 'https://github.com/kontron/redmine_oauth'
   author_url 'https://github.com/kontron/redmine_oauth/graphs/contributors'
 
@@ -54,6 +54,7 @@ Redmine::Plugin.register :redmine_oauth do
     oauth_login: '0',
     custom_logout_endpoint: '',
     validate_user_roles: '',
-    oauth_version: 'v2.0'
+    oauth_version: 'v2.0',
+    identify_user_by: 'email'
   }, partial: 'settings/oauth_settings'
 end
