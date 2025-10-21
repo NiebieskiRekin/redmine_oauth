@@ -20,16 +20,12 @@
 AllCops:
   TargetRubyVersion: 3.2
   TargetRailsVersion: 7.1
-
-  NewCops: enable
+  SuggestExtensions: false
 
   Exclude:
     - '**/vendor/**/*'
 
-# Enable extensions
-require:
-  - rubocop-performance
-  - rubocop-rails
+  NewCops: enable
 
 # Rules for OAuth
 Layout/LineLength:

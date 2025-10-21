@@ -127,8 +127,9 @@ class RedmineOauthController < AccountController
       token = RedmineOauth::OauthClient.client.auth_code.get_token(params['code'],
                                                                    redirect_uri: oauth_callback_url,
                                                                    code_verifier: code_verifier)
-      user_info = JWT.decode(token.token, nil, false).first
-      email = user_info['unique_name']
+      id_token = token.params['id_token']
+      user_info = JWT.decode(id_token, nil, false).first
+      email = user_info['email']
     when 'GitHub'
       token = RedmineOauth::OauthClient.client.auth_code.get_token(params['code'],
                                                                    redirect_uri: oauth_callback_url,
@@ -160,6 +161,7 @@ class RedmineOauthController < AccountController
       user_info = JWT.decode(token.token, nil, false).first
       user_info['login'] = user_info['preferred_username']
       email = user_info['email']
+      session[:oauth_id_token] = token.params[:id_token]
     when 'Okta'
       token = RedmineOauth::OauthClient.client.auth_code.get_token(params['code'],
                                                                    redirect_uri: oauth_callback_url,
@@ -171,6 +173,7 @@ class RedmineOauthController < AccountController
       user_info = JSON.parse(userinfo_response.body)
       user_info['login'] = user_info['preferred_username']
       email = user_info['email']
+      session[:oauth_id_token] = token.params[:id_token]
     when 'Custom'
       token = RedmineOauth::OauthClient.client.auth_code.get_token(params['code'],
                                                                    redirect_uri: oauth_callback_url,
@@ -219,7 +222,6 @@ class RedmineOauthController < AccountController
     set_params
     try_to_login email, user_info, non_default_roles
     session[:oauth_login] = true
-    session[:oauth_id_token] = token.params[:id_token] if token
   rescue StandardError => e
     Rails.logger.error e.message
     flash['error'] = e.message
@@ -259,15 +261,25 @@ class RedmineOauthController < AccountController
   end
 
   def try_to_login(email, info, role_names)
-    user = User.joins(:email_addresses).where(email_addresses: { address: email }).first
+    # Login name
+    login = info['login']
+    login ||= info['unique_name']
+    login ||= info['preferred_username']
+    # Find the user
+    user = case RedmineOauth.identify_user_by
+           when 'login'
+             User.where('LOWER(login) = ?', login.downcase).first
+           else
+             User.joins(:email_addresses).where('LOWER(email_addresses.address) = ?', email.downcase).first
+           end
     if user # Existing user
       if user.registered? # Registered
         account_pending user
       elsif user.active? # Active
         handle_active_user user
         user.update_last_login_on!
-        if RedmineOauth.update_login? && (info['login'] || info['unique_name'])
-          user.login = info['login'] || info['unique_name']
+        if RedmineOauth.update_login?
+          user.login = login
           Rails.logger.error(user.errors.full_messages.to_sentence) unless user.save
         end
         # Disable 2FA initialization request
@@ -289,8 +301,6 @@ class RedmineOauthController < AccountController
       lastname ||= info[key]
       user.lastname = lastname
       user.mail = email
-      login = info['login']
-      login ||= info['unique_name']
       user.login = login
       user.random_password
       user.register
