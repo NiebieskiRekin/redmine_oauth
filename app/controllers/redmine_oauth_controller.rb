@@ -28,9 +28,11 @@ class RedmineOauthController < AccountController
   before_action :verify_csrf_token, only: [:oauth_callback]
 
   def oauth
+    # Session
+    session[:oauth_provider] = params[:oauth_provider]
     session[:back_url] = params[:back_url]
     session[:autologin] = params[:autologin]
-    session[:oauth_autologin] = params[:oauth_autologin]
+    session[:oauth_autologin] = params[:oauth_provider] if params[:oauth_autologin]
     oauth_csrf_token = generate_csrf_token
     session[:oauth_csrf_token] = oauth_csrf_token
 
@@ -39,12 +41,16 @@ class RedmineOauthController < AccountController
     session[:code_verifier] = code_verifier
     code_challenge = generate_code_challenge(code_verifier)
 
-    case RedmineOauth.oauth_name
+    # OAuth provider
+    oauth_provider = OauthProvider.find(params[:oauth_provider])
+
+    # Login
+    case oauth_provider.oauth_name
     when 'Azure AD'
-      redirect_to RedmineOauth::OauthClient.client.auth_code.authorize_url(
+      redirect_to RedmineOauth::OauthClient.client(oauth_provider).auth_code.authorize_url(
         redirect_uri: oauth_callback_url,
         state: oauth_csrf_token,
-        scope: case RedmineOauth.oauth_version
+        scope: case oauth_provider.oauth_version
                when 'v2.0'
                  'openid profile email'
                else
@@ -54,7 +60,7 @@ class RedmineOauthController < AccountController
         code_challenge_method: 'S256'
       )
     when 'GitHub'
-      redirect_to RedmineOauth::OauthClient.client.auth_code.authorize_url(
+      redirect_to RedmineOauth::OauthClient.client(oauth_provider).auth_code.authorize_url(
         redirect_uri: oauth_callback_url,
         state: oauth_csrf_token,
         scope: 'user:email',
@@ -62,23 +68,28 @@ class RedmineOauthController < AccountController
         code_challenge_method: 'S256'
       )
     when 'GitLab'
-      redirect_to RedmineOauth::OauthClient.client.auth_code.authorize_url(
+      args = {
         redirect_uri: oauth_callback_url,
         state: oauth_csrf_token,
         scope: 'read_user',
         code_challenge: code_challenge,
         code_challenge_method: 'S256'
-      )
+      }
+      args[hd: oauth_provider.hd] if oauth_provider.hd.present?
+      args[access_type: oauth_provider.access_type] if oauth_provider.access_type.present?
+      redirect_to RedmineOauth::OauthClient.client(oauth_provider).auth_code.authorize_url(args)
     when 'Google'
-      redirect_to RedmineOauth::OauthClient.client.auth_code.authorize_url(
+      url = RedmineOauth::OauthClient.client(oauth_provider).auth_code.authorize_url(
         redirect_uri: oauth_callback_url,
         state: oauth_csrf_token,
         scope: 'profile email',
         code_challenge: code_challenge,
         code_challenge_method: 'S256'
       )
+      url << "&#{oauth_provider.url_parameters}" if oauth_provider.url_parameters.present?
+      redirect_to url
     when 'Keycloak'
-      redirect_to RedmineOauth::OauthClient.client.auth_code.authorize_url(
+      redirect_to RedmineOauth::OauthClient.client(oauth_provider).auth_code.authorize_url(
         redirect_uri: oauth_callback_url,
         state: oauth_csrf_token,
         scope: 'openid email',
@@ -86,7 +97,7 @@ class RedmineOauthController < AccountController
         code_challenge_method: 'S256'
       )
     when 'Okta'
-      redirect_to RedmineOauth::OauthClient.client.auth_code.authorize_url(
+      redirect_to RedmineOauth::OauthClient.client(oauth_provider).auth_code.authorize_url(
         redirect_uri: oauth_callback_url,
         state: oauth_csrf_token,
         scope: 'openid profile email',
@@ -94,10 +105,10 @@ class RedmineOauthController < AccountController
         code_challenge_method: 'S256'
       )
     when 'Custom'
-      redirect_to RedmineOauth::OauthClient.client.auth_code.authorize_url(
+      redirect_to RedmineOauth::OauthClient.client(oauth_provider).auth_code.authorize_url(
         redirect_uri: oauth_callback_url,
         state: oauth_csrf_token,
-        scope: RedmineOauth.custom_scope,
+        scope: oauth_provider.custom_scope,
         code_challenge: code_challenge,
         code_challenge_method: 'S256'
       )
@@ -108,6 +119,7 @@ class RedmineOauthController < AccountController
   rescue StandardError => e
     Rails.logger.error e.message
     flash['error'] = e.message
+    cookies.delete :oauth_autologin
     redirect_to signin_path
   end
 
@@ -120,54 +132,63 @@ class RedmineOauthController < AccountController
     # Retrieve the PKCE code_verifier from the session
     code_verifier = session.delete(:code_verifier)
 
-    token = nil
+    # Provider
+    oauth_provider = OauthProvider.find(session[:oauth_provider])
 
-    case RedmineOauth.oauth_name
+    # Login
+    case oauth_provider.oauth_name
     when 'Azure AD'
-      token = RedmineOauth::OauthClient.client.auth_code.get_token(params['code'],
-                                                                   redirect_uri: oauth_callback_url,
-                                                                   code_verifier: code_verifier)
+      token = RedmineOauth::OauthClient.client(oauth_provider).auth_code.get_token(params['code'],
+                                                                                   redirect_uri: oauth_callback_url,
+                                                                                   code_verifier: code_verifier)
       id_token = token.params['id_token']
       user_info = JWT.decode(id_token, nil, false).first
       email = user_info['email']
     when 'GitHub'
-      token = RedmineOauth::OauthClient.client.auth_code.get_token(params['code'],
-                                                                   redirect_uri: oauth_callback_url,
-                                                                   code_verifier: code_verifier)
+      token = RedmineOauth::OauthClient.client(oauth_provider).auth_code.get_token(params['code'],
+                                                                                   redirect_uri: oauth_callback_url,
+                                                                                   code_verifier: code_verifier)
       userinfo_response = token.get('https://api.github.com/user', headers: { 'Accept' => 'application/json' })
       user_info = JSON.parse(userinfo_response.body)
       email = user_info['email']
     when 'GitLab'
-      token = RedmineOauth::OauthClient.client.auth_code.get_token(params['code'],
-                                                                   redirect_uri: oauth_callback_url,
-                                                                   code_verifier: code_verifier)
+      token = RedmineOauth::OauthClient.client(oauth_provider).auth_code.get_token(params['code'],
+                                                                                   redirect_uri: oauth_callback_url,
+                                                                                   code_verifier: code_verifier)
       userinfo_response = token.get('/api/v4/user', headers: { 'Accept' => 'application/json' })
       user_info = JSON.parse(userinfo_response.body)
       user_info['login'] = user_info['username']
       email = user_info['email']
     when 'Google'
-      token = RedmineOauth::OauthClient.client.auth_code.get_token(params['code'],
-                                                                   redirect_uri: oauth_callback_url,
-                                                                   code_verifier: code_verifier)
+      token = RedmineOauth::OauthClient.client(oauth_provider).auth_code.get_token(params['code'],
+                                                                                   redirect_uri: oauth_callback_url,
+                                                                                   code_verifier: code_verifier)
       userinfo_response = token.get('https://openidconnect.googleapis.com/v1/userinfo',
                                     headers: { 'Accept' => 'application/json' })
       user_info = JSON.parse(userinfo_response.body)
       user_info['login'] = user_info['email']
+      if oauth_provider.url_parameters =~ /hd=([^&]*)/
+        hd = Regexp.last_match(1)
+        if user_info['hd'].present? && (hd != '*') && user_info['hd'] != hd
+          raise StandardError, l(:error_invalid_hosted_domain)
+        end
+      end
+
       email = user_info['email']
     when 'Keycloak'
-      token = RedmineOauth::OauthClient.client.auth_code.get_token(params['code'],
-                                                                   redirect_uri: oauth_callback_url,
-                                                                   code_verifier: code_verifier)
+      token = RedmineOauth::OauthClient.client(oauth_provider).auth_code.get_token(params['code'],
+                                                                                   redirect_uri: oauth_callback_url,
+                                                                                   code_verifier: code_verifier)
       user_info = JWT.decode(token.token, nil, false).first
       user_info['login'] = user_info['preferred_username']
       email = user_info['email']
       session[:oauth_id_token] = token.params[:id_token]
     when 'Okta'
-      token = RedmineOauth::OauthClient.client.auth_code.get_token(params['code'],
-                                                                   redirect_uri: oauth_callback_url,
-                                                                   code_verifier: code_verifier)
+      token = RedmineOauth::OauthClient.client(oauth_provider).auth_code.get_token(params['code'],
+                                                                                   redirect_uri: oauth_callback_url,
+                                                                                   code_verifier: code_verifier)
       userinfo_response = token.get(
-        "/oauth2/#{RedmineOauth.tenant_id}/v1/userinfo",
+        "/oauth2/#{oauth_provider.tenant_id}/v1/userinfo",
         headers: { 'Accept' => 'application/json' }
       )
       user_info = JSON.parse(userinfo_response.body)
@@ -175,20 +196,20 @@ class RedmineOauthController < AccountController
       email = user_info['email']
       session[:oauth_id_token] = token.params[:id_token]
     when 'Custom'
-      token = RedmineOauth::OauthClient.client.auth_code.get_token(params['code'],
-                                                                   redirect_uri: oauth_callback_url,
-                                                                   code_verifier: code_verifier)
-      if RedmineOauth.custom_profile_endpoint.empty?
+      token = RedmineOauth::OauthClient.client(oauth_provider).auth_code.get_token(params['code'],
+                                                                                   redirect_uri: oauth_callback_url,
+                                                                                   code_verifier: code_verifier)
+      if oauth_provider.custom_profile_endpoint.empty?
         user_info = JWT.decode(token.token, nil, false).first
       else
         userinfo_response = token.get(
-          RedmineOauth.custom_profile_endpoint,
+          oauth_provider.custom_profile_endpoint,
           headers: { 'Accept' => 'application/json' }
         )
         user_info = JSON.parse(userinfo_response.body)
       end
-      user_info['login'] = user_info[RedmineOauth.custom_uid_field]
-      email = user_info[RedmineOauth.custom_email_field]
+      user_info['login'] = user_info[oauth_provider.custom_uid_field]
+      email = user_info[oauth_provider.custom_email_field]
     else
       raise StandardError, l(:oauth_invalid_provider)
     end
@@ -196,7 +217,7 @@ class RedmineOauthController < AccountController
 
     # Roles
     non_default_roles = []
-    keys = RedmineOauth.validate_user_roles.split('.')
+    keys = oauth_provider.validate_user_roles&.split('.')
     if keys&.size&.positive?
       roles = user_info
       while keys.size.positive?
@@ -220,8 +241,8 @@ class RedmineOauthController < AccountController
 
     # Try to log in
     set_params
-    try_to_login email, user_info, non_default_roles
-    session[:oauth_login] = true
+    try_to_login email, user_info, non_default_roles, oauth_provider
+    session[:oauth_login] = oauth_provider.id
   rescue StandardError => e
     Rails.logger.error e.message
     flash['error'] = e.message
@@ -231,7 +252,7 @@ class RedmineOauthController < AccountController
 
   def set_oauth_autologin_cookie
     cookie_options = {
-      value: '1',
+      value: params[:oauth_autologin],
       expires: 1.year.from_now,
       path: RedmineApp::Application.config.relative_url_root || '/',
       same_site: :lax,
@@ -244,11 +265,11 @@ class RedmineOauthController < AccountController
   private
 
   def generate_code_verifier
-    SecureRandom.urlsafe_base64(32)
+    SecureRandom.urlsafe_base64 32
   end
 
   def generate_code_challenge(code_verifier)
-    Base64.urlsafe_encode64(Digest::SHA256.digest(code_verifier)).delete('=')
+    Base64.urlsafe_encode64(Digest::SHA256.digest(code_verifier)).delete '='
   end
 
   def set_params
@@ -260,13 +281,13 @@ class RedmineOauthController < AccountController
     session.delete :oauth_autologin
   end
 
-  def try_to_login(email, info, role_names)
+  def try_to_login(email, info, role_names, oauth_provider)
     # Login name
     login = info['login']
     login ||= info['unique_name']
     login ||= info['preferred_username']
     # Find the user
-    user = case RedmineOauth.identify_user_by
+    user = case oauth_provider.identify_user_by
            when 'login'
              User.where('LOWER(login) = ?', login.downcase).first
            else
@@ -293,8 +314,8 @@ class RedmineOauthController < AccountController
       # Create on the fly
       user = User.new
       user.mail = email
-      user.firstname = info[RedmineOauth.custom_firstname_field]
-      user.lastname = info[RedmineOauth.custom_lastname_field]
+      user.firstname = info[oauth_provider.custom_firstname_field]
+      user.lastname = info[oauth_provider.custom_lastname_field]
       first_name, last_name = info['name'].split if info['name'].present?
       user.firstname ||= first_name
       user.lastname ||= last_name
@@ -323,7 +344,7 @@ class RedmineOauthController < AccountController
       raise StandardError, l(:notice_account_invalid_credentials)
     end
 
-    if RedmineOauth.enable_group_roles?
+    if oauth_provider.enable_group_roles?
       desired_groups = Group.where(lastname: role_names)
       user.group_ids = desired_groups.ids
     end

@@ -45,6 +45,7 @@ module RedmineOauth
       end
     end
 
+    
     def oauth_path
       if Setting.plugin_redmine_oauth['oauth_path'].present?
         "/" + Setting.plugin_redmine_oauth['oauth_path'].strip.sub(/^\/|\/$/, '')
@@ -150,22 +151,6 @@ module RedmineOauth
       Setting.plugin_redmine_oauth['self_registration'].to_i
     end
 
-    def custom_firstname_field
-      if Setting.plugin_redmine_oauth['custom_firstname_field'].present?
-        Setting.plugin_redmine_oauth['custom_firstname_field'].strip
-      else
-        'given_name'
-      end
-    end
-
-    def custom_lastname_field
-      if Setting.plugin_redmine_oauth['custom_lastname_field'].present?
-        Setting.plugin_redmine_oauth['custom_lastname_field'].strip
-      else
-        'family_name'
-      end
-    end
-
     def update_login?
       value = Setting.plugin_redmine_oauth['update_login']
       value.to_i.positive? || value == 'true'
@@ -184,59 +169,6 @@ module RedmineOauth
     def oauth_only_login?
       value = Setting.plugin_redmine_oauth['oauth_only_login']
       value.to_i.positive? || value == 'true'
-    end
-
-    def custom_logout_endpoint
-      if Setting.plugin_redmine_oauth['custom_logout_endpoint'].present?
-        Setting.plugin_redmine_oauth['custom_logout_endpoint'].strip
-      else
-        ''
-      end
-    end
-
-    def validate_user_roles
-      if Setting.plugin_redmine_oauth['validate_user_roles'].present?
-        Setting.plugin_redmine_oauth['validate_user_roles'].strip
-      else
-        ''
-      end
-    end
-
-    def enable_group_roles?
-      value = Setting.plugin_redmine_oauth['enable_group_roles']
-      value.to_i.positive? || value == 'true'
-    end
-
-    def oauth_version
-      if Setting.plugin_redmine_oauth['oauth_version'].present?
-        Setting.plugin_redmine_oauth['oauth_version'].strip
-      else
-        ''
-      end
-    end
-
-    def custom_uid_field
-      if Setting.plugin_redmine_oauth['custom_uid_field'].present?
-        Setting.plugin_redmine_oauth['custom_uid_field'].strip
-      else
-        ''
-      end
-    end
-
-    def custom_email_field
-      if Setting.plugin_redmine_oauth['custom_email_field'].present?
-        Setting.plugin_redmine_oauth['custom_email_field'].strip
-      else
-        ''
-      end
-    end
-
-    def identify_user_by
-      if Setting.plugin_redmine_oauth['identify_user_by'].present?
-        Setting.plugin_redmine_oauth['identify_user_by'].strip
-      else
-        'email'
-      end
     end
   end
 end
