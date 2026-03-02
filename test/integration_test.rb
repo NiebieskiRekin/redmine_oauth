@@ -17,21 +17,21 @@
 # You should have received a copy of the GNU General Public License along with Redmine OAuth plugin. If not, see
 # <https://www.gnu.org/licenses/>.
 
-module RedmineOauth
-  module Hooks
-    module Views
-      # Base view hooks
-      class BaseViewHooks < Redmine::Hook::ViewListener
-        def view_layouts_base_html_head(context = {})
-          unless /^(AccountController|SettingsController|RedmineOauthController|OauthProvidersController)/.match?(
-            context[:controller].class.name
-          )
-            return
-          end
+# Load the normal Rails helper
+require File.expand_path('../../../../test/test_helper', __FILE__)
 
-          "\n".html_safe + stylesheet_link_tag('redmine_oauth', plugin: :redmine_oauth) +
-            "\n".html_safe + stylesheet_link_tag('fontawesome/all.min', plugin: :redmine_oauth) +
-            "\n".html_safe + javascript_include_tag('redmine_oauth', plugin: :redmine_oauth)
+module RedmineOAuth
+  module Test
+    # Integration test
+    class IntegrationTest < Redmine::IntegrationTest
+      def initialize(name)
+        super
+        # Load all plugin's fixtures
+        dir = File.join(File.dirname(__FILE__), 'fixtures')
+        ext = '.yml'
+        Dir.glob("#{dir}/**/*#{ext}").each do |file|
+          fixture = File.basename(file, ext)
+          ActiveRecord::FixtureSet.create_fixtures dir, fixture
         end
       end
     end

@@ -1,6 +1,42 @@
 Changelog for Redmine OAuth
 ==========================
 
+4.0.3 *2026-02-24*
+------------------
+
+    Bugs fixing
+
+* Big: #109 - Redirect after login doesn't work
+
+4.0.2 *2026-02-18*
+------------------
+
+    OAuth URL parameters
+
+* New: #107 - Add support different title and button
+* New: #106 - Add support for args
+ 
+4.0.2
+
+4.0.1 *2026-02-15*
+------------------
+
+    Bugs fixing
+
+* Bug: #105 - Validation failed: Site cannot be blank
+
+4.0.0 *2026-02-12*
+------------------
+
+    Multiple Authorization providers
+
+IMPORTANT:
+
+During the database migration is an existing OAuth provider's configuration migrated from the plugin's settings into
+OAuth providers available in the Administration.
+
+* New #82 - Ability of multiple authentication sources (multi-tenant)
+
 3.0.9 *2026-01-23*
 ------------------
 

@@ -17,23 +17,17 @@
 # You should have received a copy of the GNU General Public License along with Redmine OAuth plugin. If not, see
 # <https://www.gnu.org/licenses/>.
 
-module RedmineOauth
-  module Hooks
-    module Views
-      # Base view hooks
-      class BaseViewHooks < Redmine::Hook::ViewListener
-        def view_layouts_base_html_head(context = {})
-          unless /^(AccountController|SettingsController|RedmineOauthController|OauthProvidersController)/.match?(
-            context[:controller].class.name
-          )
-            return
-          end
+# OauthProviders DB migration
+class UrlParameters < ActiveRecord::Migration[7.2]
+  def up
+    remove_column :oauth_providers, :hd
+    remove_column :oauth_providers, :access_type
+    add_column :oauth_providers, :url_parameters, :string, null: true, limit: 128
+  end
 
-          "\n".html_safe + stylesheet_link_tag('redmine_oauth', plugin: :redmine_oauth) +
-            "\n".html_safe + stylesheet_link_tag('fontawesome/all.min', plugin: :redmine_oauth) +
-            "\n".html_safe + javascript_include_tag('redmine_oauth', plugin: :redmine_oauth)
-        end
-      end
-    end
+  def down
+    remove_column :oauth_providers, :url_parameters
+    add_column :oauth_providers, :hd, :string, null: true, limit: 40
+    add_column :oauth_providers, :access_type, :string, null: true, limit: 7
   end
 end

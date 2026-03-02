@@ -19,23 +19,22 @@
 # <https://www.gnu.org/licenses/>.
 */
 
-button#login-oauth-submit {
-  margin:auto;
-  display:block;
-}
-
 label[for="oauth_autologin"] {
-  margin:auto;
-  display:block;
+  margin: 10px auto auto;
+  display: block;
   width: fit-content;
 }
 
 div#oauth-form {
   margin: auto;
-  width: 340px;
+  width: fit-content;
 }
 
-input#button_color {
+div#oauth-form-buttons {
+  text-align: center;
+}
+
+input#oauth_provider_button_color {
   padding: 0;
 }
 
